@@ -14,12 +14,12 @@ def main(config):
     # setup data_loader instances
     data_loader = getattr(module_data, config['data_loader']['type'])(
         config['data_loader']['args']['data_dir'],
-        batch_size=512,
+        batch_size=config['data_loader']['args']['batch_size'],
         shuffle=False,
         validation_split=0.0,
         training=False,
         num_workers=2
-    ).split_validation()
+    ).split_validation(bs=config['data_loader']['args']['batch_size'])
 
     # build model architecture
     model = config.initialize('arch', module_arch)
@@ -35,7 +35,7 @@ def main(config):
     if config['n_gpu'] > 1:
         model = torch.nn.DataParallel(model)
     model.load_state_dict(state_dict)
-
+    
     # prepare model for testing
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = model.to(device)

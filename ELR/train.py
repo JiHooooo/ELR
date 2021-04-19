@@ -4,8 +4,8 @@ import sys
 import requests
 import socket
 import torch
-import mlflow
-import mlflow.pytorch
+#import mlflow
+#import mlflow.pytorch
 import data_loader.data_loaders as module_data
 import model.loss as module_loss
 import model.metric as module_metric
@@ -14,21 +14,6 @@ from parse_config import ConfigParser
 from trainer import Trainer
 from collections import OrderedDict
 import random
-
-
-
-def log_params(conf: OrderedDict, parent_key: str = None):
-    for key, value in conf.items():
-        if parent_key is not None:
-            combined_key = f'{parent_key}-{key}'
-        else:
-            combined_key = key
-
-        if not isinstance(value, OrderedDict):
-            mlflow.log_param(combined_key, value)
-        else:
-            log_params(value, combined_key)
-
 
 def main(config: ConfigParser):
 
@@ -45,24 +30,24 @@ def main(config: ConfigParser):
         pin_memory=config['data_loader']['args']['pin_memory'] 
     )
 
+    valid_data_loader = data_loader.split_validation(bs = config['data_loader']['args']['batch_size'])
 
-    valid_data_loader = data_loader.split_validation()
+    test_data_loader = None
 
-    # test_data_loader = None
-
+    """
     test_data_loader = getattr(module_data, config['data_loader']['type'])(
         config['data_loader']['args']['data_dir'],
-        batch_size=128,
+        batch_size=config['data_loader']['args']['batch_size'],
         shuffle=False,
         validation_split=0.0,
         training=False,
-        num_workers=2
+        num_workers=config['data_loader']['args']['num_workers']
     ).split_validation()
-
+    """
 
     # build model architecture, then print to console
     model = config.initialize('arch', module_arch)
-
+    
     # get function handles of loss and metrics
     logger.info(config.config)
     if hasattr(data_loader.dataset, 'num_raw_example'):
@@ -70,7 +55,7 @@ def main(config: ConfigParser):
     else:
         num_examp = len(data_loader.dataset)
 
-    train_loss = getattr(module_loss, config['train_loss']['type'])(num_examp=num_examp, num_classes=config['num_classes'],
+    train_loss = getattr(module_loss, config['train_loss']['type'])(num_examp=num_examp, num_classes=config['arch']['args']['num_classes'],
                                                             beta=config['train_loss']['args']['beta'])
 
     val_loss = getattr(module_loss, config['val_loss'])

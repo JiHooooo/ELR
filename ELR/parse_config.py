@@ -62,8 +62,8 @@ class ConfigParser:
             exper_name = self.config['name'] + '_asym_' + str(int(self.config['trainer']['percent']*100))
         else:
             exper_name = self.config['name'] + '_sym_' + str(int(self.config['trainer']['percent']*100))
-        self._save_dir = save_dir / 'models' / exper_name / timestamp
-        self._log_dir = save_dir / 'log' / exper_name / timestamp
+        self._save_dir = save_dir / exper_name / timestamp / 'models' 
+        self._log_dir = save_dir / exper_name / timestamp / 'log' 
 
         self.save_dir.mkdir(parents=True, exist_ok=True)
         self.log_dir.mkdir(parents=True, exist_ok=True)

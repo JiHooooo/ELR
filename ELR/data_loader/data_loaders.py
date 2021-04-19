@@ -1,12 +1,14 @@
 import sys
-
 from torchvision import datasets, transforms
 from base import BaseDataLoader
 from data_loader.cifar10 import get_cifar10
 from data_loader.cifar100 import get_cifar100
 from parse_config import ConfigParser
 from PIL import Image
-
+import pandas as pd
+import random
+from .SelfDataset import SelfDataset
+from .augmentation import get_augmentation
 
 class CIFAR10DataLoader(BaseDataLoader):
     def __init__(self, data_dir, batch_size, shuffle=True, validation_split=0.0, num_batches=0,  training=True, num_workers=4,  pin_memory=True):
@@ -68,3 +70,54 @@ class CIFAR100DataLoader(BaseDataLoader):
     def run_loader(self, batch_size, shuffle, validation_split, num_workers, pin_memory):
         super().__init__(self.train_dataset, batch_size, shuffle, validation_split, num_workers, pin_memory,
                          val_dataset = self.val_dataset)
+
+class SelfDataLoader(BaseDataLoader):
+    def __init__(self, data_dir, batch_size, 
+                shuffle=True, validation_split=0.0, num_batches=0,  
+                training=True, num_workers=4,  pin_memory=True):
+        config = ConfigParser.get_instance()
+        cfg_trainer = config['trainer']
+
+        transforms_train = get_augmentation(input_size=(config['data_loader']['args']['image_size'],config['data_loader']['args']['image_size']),
+                                            train_flag=True,
+                                            normalize_flag = config['data_loader']['args']['normalize_flag'])
+
+        transforms_val = get_augmentation(input_size=(config['data_loader']['args']['image_size'],config['data_loader']['args']['image_size']),
+                                            train_flag=False,
+                                            normalize_flag = config['data_loader']['args']['normalize_flag'])
+
+        self.train_dataset = SelfDataset(config['data_loader']['args']['data_dir']+'/train',
+                                        config['data_loader']['args']['label_name'], train=training, 
+                                        change_ratio=cfg_trainer['percent'], transforms=transforms_train)
+        self.val_dataset = SelfDataset(config['data_loader']['args']['data_dir']+'/val', 
+                                        config['data_loader']['args']['label_name'], train=False, 
+                                        change_ratio=cfg_trainer['percent'], transforms=transforms_val)
+        
+        
+        super().__init__(self.train_dataset, batch_size, shuffle, validation_split, num_workers, pin_memory,
+                         val_dataset = self.val_dataset)
+    def run_loader(self, batch_size, shuffle, validation_split, num_workers, pin_memory):
+        super().__init__(self.train_dataset, batch_size, shuffle, validation_split, num_workers, pin_memory,
+                         val_dataset = self.val_dataset)
+
+def Image_Info_from_df(df_path):
+    print('start loading information')
+    df = pd.read_csv(df_path,encoding="cp932")
+    image_info = []
+    for index in range(len(df)):
+        #input image name
+        image_info_one = [df.iloc[index]['image_path'],]
+        for label in _label_name:
+            image_info_one.append(int(df.iloc[index][label]))                                 
+        image_info.append(image_info_one)
+    print('finish loading information')
+    return image_info
+
+def save_train_val(info, save_path):
+    info_columns = ['image_path',]
+    info_columns.extend(_label_name)
+    info_dict = {name:[] for name in info_columns}
+    for one_info in info:
+        for column_index, column in enumerate(info_columns):
+            info_dict[column].append(one_info[column_index])
+    pd.DataFrame(info_dict).to_csv(save_path)

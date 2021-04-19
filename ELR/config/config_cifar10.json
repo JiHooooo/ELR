@@ -12,8 +12,9 @@
 
     "data_loader": {
         "type": "CIFAR10DataLoader",
+        "download": true,
         "args":{
-            "data_dir": "/dir_to_data",
+            "data_dir": "/home/kaihatsu/Documents/hjh/dataset/torch/cifar10",
             "batch_size": 128,
             "shuffle": true,
             "num_batches": 0,

@@ -1,0 +1,77 @@
+{
+    "name": "potatoes_shape_new_data_0",
+    "n_gpu": 1,
+    "seed": 123,
+
+    "arch": {
+        "type": "CNN",
+        "args": {"num_classes":10}
+    },
+
+    "num_classes": 10,
+
+    "data_loader": {
+        "type": "SelfDataLoader",
+        "args":{
+            "data_dir": "data",
+            "batch_size": 32,
+            "shuffle": true,
+            "num_batches": 0,
+            "validation_split": 0,
+            "num_workers": 8,
+            "pin_memory": true,
+            "image_size":224,
+            "normalize_flag":true,
+            "label_name":["airplane","automobile","ship","truck","bird","cat","deer","dog","frog","horse"]
+        }
+    },
+
+    "optimizer": {
+        "type": "SGD",
+        "args":{
+            "lr": 0.01,
+            "momentum": 0.9,
+            "weight_decay": 1e-4
+        }
+    },
+    
+    "train_loss": {
+        "type": "elr_loss",
+        "args":{
+            "beta": 0.7,
+            "lambda": 3
+        }
+    },
+
+    "val_loss": "cross_entropy",
+    "metrics": [
+        "my_metric"
+    ],
+
+    "lr_scheduler": {
+        "type": "CosineAnnealingWarmRestarts",
+        "args": {
+            "T_0": 60,
+            "eta_min": 0.00001
+        }
+    },
+
+    "trainer": {
+        "epochs": 200,
+        "warmup": 0,
+        "save_dir": "saved/",
+        "save_period": 10,
+        "verbosity": 2,
+        "label_dir": "saved/",
+        "monitor": "max val_my_metric",
+        "early_stop": 2000,
+        "tensorboard": false,
+        "mlflow": false,
+        "_percent": "Percentage of noise",
+        "percent": 0.5,
+        "_begin": "When to begin updating labels",
+        "begin": 0,
+        "_asym": "symmetric noise if false",
+        "asym": false
+    }
+}

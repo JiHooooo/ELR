@@ -17,7 +17,7 @@ dataset_val = torchvision.datasets.CIFAR10(save_folder, train=False, download=Tr
 label_name_dist = {j:i for i,j in dataset.class_to_idx.items()}
 for dataset_one, sub_folder_one in zip([dataset, dataset_val], sub_folder):
     for label_index, label_name in label_name_dist.items():
-        save_folder_one = '%s/%s/%s'%(save_folder, sub_folder, label_name)
+        save_folder_one = '%s/%s/%s'%(save_folder, sub_folder_one, label_name)
         os.makedirs(save_folder_one)
         one_type_data = dataset_one.data[np.where(np.array(dataset_one.targets) == label_index)]
         save_image(one_type_data, [i for i in range(len(one_type_data))], save_folder_one, label_name)
